@@ -1,5 +1,7 @@
 # parsedmarc-dockerized
 
+[![Build Status](https://drone.boehm.sh/api/badges/SunRed/parsedmarc-dockerized/status.svg)](https://drone.boehm.sh/SunRed/parsedmarc-dockerized)
+
 Note: The standalone `parsedmarc` docker image on [DockerHub @ sunred/parsedmarc](https://hub.docker.com/r/sunred/parsedmarc) can also be used, if interested.
 
 ## Setup:
