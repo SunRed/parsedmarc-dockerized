@@ -1,6 +1,6 @@
 services:
   parsedmarc-init:
-    image: patschi/parsedmarc:init
+    image: sunred/parsedmarc:init
     container_name: parsedmarc-init
     build:
       context: ./data/Dockerfiles/parsedmarc-init
@@ -18,7 +18,7 @@ services:
       retries: 9999
       start_period: 10s
   parsedmarc:
-    image: patschi/parsedmarc:latest
+    image: sunred/parsedmarc:latest
     container_name: parsedmarc
     build:
       context: ./data/Dockerfiles/parsedmarc
