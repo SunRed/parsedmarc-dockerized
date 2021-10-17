@@ -8,16 +8,6 @@ echo "Setting permissions..."
 chmod g+rwx -R /usr/share/elasticsearch/data/
 chgrp 0 -R /usr/share/elasticsearch/data/
 
-echo "## NGINX"
-echo "Checking nginx certs..."
-cd /etc/nginx/ssl/
-if [ ! -f "/etc/nginx/ssl/kibana.crt" ] || [ ! -f "/etc/nginx/ssl/kibana.key" ]; then
-	echo "No certs found. Generating..."
-	openssl req -x509 -nodes -days 365 -newkey rsa:3072 -keyout kibana.key -out kibana.crt \
-		-subj "/CN=parsedmarc" -addext "subjectAltName=DNS:parsedmarc"
-	echo "Certs generated."
-fi
-
 echo "## KIBANA"
 exportFile="/etc/parsedmarc/kibana_export.ndjson"
 if [ ! -f "${exportFile}" ]; then

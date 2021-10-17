@@ -1,0 +1,110 @@
+services:
+  parsedmarc-init:
+    image: patschi/parsedmarc:init
+    container_name: parsedmarc-init
+    build:
+      context: ./data/Dockerfiles/parsedmarc-init
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    volumes:
+      - ./data/conf/parsedmarc/:/etc/parsedmarc/:rw
+      - ./data/data/elasticsearch:/usr/share/elasticsearch/data/:rw
+    networks:
+      - parsedmarc
+    healthcheck:
+      test: [ "CMD", "test", "-f", "/ready" ]
+      interval: 10s
+      timeout: 5s
+      retries: 9999
+      start_period: 10s
+  parsedmarc:
+    image: patschi/parsedmarc:latest
+    container_name: parsedmarc
+    build:
+      context: ./data/Dockerfiles/parsedmarc
+      dockerfile: Dockerfile
+    volumes:
+      - ./data/conf/parsedmarc/:/etc/parsedmarc/
+      - ./data/data/geoipupdate:/usr/share/GeoIP:z,ro
+    restart: unless-stopped
+    networks:
+      - parsedmarc
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.15.0
+    container_name: parsedmarc-elasticsearch
+    environment:
+      - xpack.security.enabled=false
+      - cluster.name=parsedmarc
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms256m -Xmx256m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - ./data/data/elasticsearch:/usr/share/elasticsearch/data/
+    restart: unless-stopped
+    networks:
+      - parsedmarc
+    expose: # only expose docker-internally
+      - 9200
+    healthcheck:
+      test: [ "CMD", "curl","-s" ,"-f", "http://localhost:9200/_cat/health" ]
+      interval: 1m
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    depends_on:
+      parsedmarc-init:
+        condition: service_started
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.15.0
+    container_name: parsedmarc-kibana
+    environment:
+      - elasticsearch.hosts=http://elasticsearch:9200
+      - telemetry.enabled=false
+      - telemetry.optIn=false
+    expose: # only expose docker-internally
+      - 5601
+    ports:
+      - "127.0.0.1:5601:5601"
+      - "[::1]:5601:5601"
+    restart: unless-stopped
+    networks:
+      - parsedmarc
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "curl","-s" ,"-f", "http://localhost:5601/" ]
+      interval: 1m
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+  geoipupdate:
+    image: crazymax/geoip-updater:latest
+    container_name: parsedmarc-geoipupdate
+    volumes:
+      - ./data/data/geoipupdate:/data:z,rw
+    env_file:
+      - ./data/conf/geoipupdate.env
+    networks:
+      - parsedmarc
+    restart: unless-stopped
+
+networks:
+  parsedmarc:
+    name: "parsedmarc"
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.name: br-parsedmarc
+    enable_ipv6: true
+    ipam:
+      config:
+        - subnet: 172.18.0.0/29
+        - subnet: fd00:1720:180::/64
