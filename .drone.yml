@@ -12,7 +12,7 @@ steps:
   image: plugins/docker
   settings:
     context: data/Dockerfiles/parsedmarc-init
-    dockerfile: Dockerfile
+    dockerfile: data/Dockerfiles/parsedmarc-init/Dockerfile
     group: publish
     repo: sunred/parsedmarc
     tag: init
@@ -31,7 +31,7 @@ steps:
   image: plugins/docker
   settings:
     context: data/Dockerfiles/parsedmarc
-    dockerfile: Dockerfile
+    dockerfile: data/Dockerfiles/parsedmarc/Dockerfile
     group: publish
     repo: sunred/parsedmarc
     tag: latest
