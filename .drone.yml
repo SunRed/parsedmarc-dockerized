@@ -1,0 +1,46 @@
+---
+kind: pipeline
+name: default
+
+platform:
+  os: linux
+  arch: amd64
+
+steps:
+- name: publish-init
+  pull: default
+  image: plugins/docker
+  settings:
+    context: data/Dockerfiles/parsedmarc-init
+    dockerfile: Dockerfile
+    group: publish
+    repo: sunred/parsedmarc
+    tag: init
+    password:
+      from_secret: docker_password
+    username:
+      from_secret: docker_username
+  when:
+    branch:
+    - master
+    event:
+    - push
+
+- name: publish-latest
+  pull: default
+  image: plugins/docker
+  settings:
+    context: data/Dockerfiles/parsedmarc
+    dockerfile: Dockerfile
+    group: publish
+    repo: sunred/parsedmarc
+    tag: latest
+    password:
+      from_secret: docker_password
+    username:
+      from_secret: docker_username
+  when:
+    branch:
+    - master
+    event:
+    - push
